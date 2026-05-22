@@ -4,10 +4,6 @@ services:
     container_name: postgres-db
     env_file:
       - .env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     healthcheck:
@@ -26,10 +22,6 @@ services:
     container_name: spring-app
     env_file:
       - .env
-    environment:
-      DB_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:8081"
     depends_on:
@@ -37,12 +29,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    restart: on-failure
-    # Дополнительная задержка для надёжности
-    command: >
-      sh -c "
-        java -jar /app/backend.jar
-      "
+    restart: unless-stopped
 
 networks:
   app-network:
