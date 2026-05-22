@@ -1,18 +1,18 @@
 # User Management API
-Проект сделан как backend pet-project REST API для управления пользователями и адресами, которые используются в реальной разработке:
-- внешняя конфигурация через environment variables;
-- миграции БД через Flyway;
-- хеширование паролей через BCrypt;
-- DTO-валидация;
-- глобальная обработка ошибок;
-- тестовый профиль с H2;
-- контейнеризация через Docker и Docker Compose.
 
+Backend pet-project на Spring Boot: REST API для управления пользователями и их адресами.  
+
+Проект собран как упрощённая backend-система с базовыми практиками промышленной разработки:
+- внешняя конфигурация через environment variables
+- хеширование паролей (BCrypt)
+- DTO-валидация
+- контейнеризация через Docker и Docker Compose
 ## Стек
 - Java 21
 - Spring Boot 3.2.5
 - Spring Web
-- Spring Data JPA / Hibernate
+- Spring Data JPA
+- Hibernate ORM
 - PostgreSQL
 - Flyway
 - BCrypt (`spring-security-crypto`)
@@ -20,50 +20,53 @@
 - Lombok
 - Springdoc OpenAPI / Swagger UI
 - JUnit 5
-- H2 (tests)
-- Docker
-- Docker Compose
+- H2 (test profile)
+- Docker + Docker Compose (Spring Boot + PostgreSQL)
+- healthcheck зависимостей
+- Конфигурация через profiles / env separation
 - Maven Wrapper
-
-## Возможности
-- создание пользователя;
-- получение списка пользователей;
-- получение пользователя по UUID;
-- обновление пользователя;
-- удаление пользователя;
-- DTO validation;
-- проверка уникальности `login`;
-- хранение пароля в виде BCrypt hash;
-- миграции БД через Flyway;
-- отдельный test profile на H2;
-- Swagger/OpenAPI документация;
-- запуск приложения и PostgreSQL через Docker Compose.
-
-# Конфигурация
-Креды БД хранятся во внешних переменных окружения:
-Для локальной разработки можно создать файл `.env` в корне проекта на основе `.env.example`.
-## Подготовка базы данных
-### Локальный запуск без Docker:
-Нужна PostgreSQL-база, например:
+## Особенности
+- CRUD API для управления пользователями и их адресами
+- валидация входящих DTO (Bean Validation)
+- проверка уникальности `login` на уровне бизнес-логики
+- безопасное хранение паролей (BCrypt hash)
+- глобальная обработка ошибок (`@ControllerAdvice`)
+- миграции базы данных через Flyway (управление схемой БД)
+- тестовый профиль с in-memory базой (H2)
+- документирование API через Swagger / OpenAPI
+- контейнеризация приложения и базы данных через Docker Compose
+## Конфигурации
+Конфигурация задаётся через environment variables.
+Пример `.env`:
+```env
+DB_URL=jdbc:postgresql://postgres-db:5432/test_db
+DB_USERNAME=postgres
+DB_PASSWORD=your_password_here
+DB_NAME=test_db
+SPRING_PORT=8081
+DB_PORT=5432
+```
+## Запуск БД
+Локальный запуск без Docker:
 ```sql
 CREATE DATABASE test_db;
 ```
-Схема таблиц создаётся автоматически при старте приложения через Flyway-миграцию:
+Схема таблиц создаётся автоматически через Flyway-миграцию:
 ```text
 src/main/resources/db/migration/V1__create_users_and_address_tables.sql
 ```
-В проекте используется режим:
+Режимы:
 ```properties
 spring.jpa.hibernate.ddl-auto=validate
 spring.flyway.enabled=true
 ```
 Flyway создаёт и изменяет схему БД, а Hibernate проверяет соответствие entity и таблиц
 ## Запуск приложения
-Из корня проекта: Linux / macOS
+Локально
 ```bash
 ./mvnw spring-boot:run
 ```
-Для Windows PowerShell:
+Windows:
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
@@ -76,13 +79,17 @@ Swagger UI доступен по адресу:
 http://localhost:8081/swagger-ui/index.html
 ```
 ## Запуск через Docker Compose
-Проект поддерживает запуск Spring Boot и PostgreSQL одной командой через Docker Compose.
-### Что используется
-- отдельный контейнер PostgreSQL;
-- отдельный контейнер Spring Boot;
-- healthcheck для ожидания готовности БД;
-- volume для хранения данных PostgreSQL;
-- env variables через .env.
+Быстрый запуск:
+```bash
+docker compose up --build
+```
+Приложение и база данных запускаются в отдельных контейнерах с помощью Docker Compose, включая healthcheck для ожидания готовности базы данных перед запуском приложения
+Компоненты:
+- Spring Boot app container
+- PostgreSQL container
+- healthcheck для БД
+- volume для хранения данных
+- env конфигурации
 ## Запуск тестов
 ```bash
 ./mvnw test
@@ -214,12 +221,10 @@ src/test
 ## Дополнительно
 - конфигурация БД вынесена во внешние environment variables;
 - .env используется только локально и игнорируется Git;
-- Flyway управляет схемой БД;
 - Hibernate работает в режиме ddl-auto=validate;
 - PostgreSQL контейнеризирован через Docker Compose;
 - данные PostgreSQL сохраняются через Docker volume;
 - REST API возвращает корректные HTTP-статусы: `201`, `200`, `204`, `400`, `404`, `409`.
-
 ## Планируемое масштабирование
 - JWT authentication;
 - роли и права доступа;
@@ -228,3 +233,9 @@ src/test
 - MockMvc tests;
 - Testcontainers;
 - CI/CD pipeline.
+## Архитектура
+Многоуровневая архитектура: Контроллер → Служба → Репозиторий → База данных
+
+DTO изолирует API-контракт от JPA entity, предотвращая утечку модели базы данных в слой представления
+
+Бизнес-логика вынесена в service-слой, контроллеры не содержат бизнес-правил
