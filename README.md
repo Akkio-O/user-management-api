@@ -102,7 +102,7 @@ docker compose up --build
 ```text
 src/test/resources/application-test.properties
 ```
-Тесты используют H2 и не требуют твою локальную PostgreSQL и креды из `.env`
+Тесты используют H2 и не требуют локальную PostgreSQL и креды из `.env`
 ## API
 Основной путь:
 ```text
