@@ -2,14 +2,15 @@ package com.server.controller;
 
 import com.server.dto.request.CreateUserReq;
 import com.server.dto.response.ApiResponse;
-import com.server.dto.response.UserResponse;
 import com.server.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.ServiceUnavailableException;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,10 +24,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse> get() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(userService.findAll());
+    public ResponseEntity<ApiResponse> get(Pageable pageable) throws ServiceUnavailableException {
+        return ResponseEntity.ok(userService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
