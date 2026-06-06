@@ -1,5 +1,4 @@
 # User Management API
-
 Backend pet-project на Spring Boot: REST API для управления пользователями и их адресами.  
 
 Проект собран как упрощённая backend-система с базовыми практиками промышленной разработки:
