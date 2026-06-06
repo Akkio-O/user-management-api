@@ -1,11 +1,13 @@
 package com.server.mapper;
 
+import com.server.ENUM.Origin;
 import com.server.dto.request.CreateAddressReq;
 import com.server.dto.request.CreateUserReq;
 import com.server.dto.response.AddressResponse;
 import com.server.dto.response.UserResponse;
 import com.server.entity.Address;
 import com.server.entity.User;
+import com.server.exceptions.MappingExceptions;
 
 public final class UserMapper {
     private UserMapper() {}
@@ -31,7 +33,17 @@ public final class UserMapper {
                 address.getBuilding()
         );
     }
-
+    public static UserResponse mapToUserResponseSafe(User user) {
+        try {
+            return mapToUserResponse(user);
+        } catch (Exception e) {
+            throw new MappingExceptions(
+                    "Не удалось сопоставить пользователя",
+                    Origin.USER_MAPPING,
+                    e
+            );
+        }
+    }
     public static User mapToUserEntity(CreateUserReq userReq, User user) {
         if (userReq == null) return null;
 

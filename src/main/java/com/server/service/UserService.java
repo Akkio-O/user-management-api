@@ -2,23 +2,30 @@ package com.server.service;
 
 import com.server.dto.request.CreateUserReq;
 import com.server.dto.response.ApiResponse;
+import com.server.dto.response.PageMeta;
 import com.server.dto.response.UserResponse;
 import com.server.entity.User;
 import com.server.exceptions.ResourceConflictException;
 import com.server.exceptions.ResourceNotFoundException;
+import com.server.exceptions.Validate;
 import com.server.mapper.UserMapper;
 import com.server.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.naming.ServiceUnavailableException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static com.server.mapper.UserMapper.mapToUserEntity;
 import static com.server.mapper.UserMapper.mapToUserResponse;
 
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -30,11 +37,23 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse findAll() {
-        List<UserResponse> users = userRepository.findAll().stream()
-                .map(UserMapper::mapToUserResponse)
-                .toList();
-        return new ApiResponse(200, users, users.size());
+    public ApiResponse findAll(Pageable pageable) throws ServiceUnavailableException {
+        Validate.validatePageable(pageable);
+        log.info("Выборка пользователей: {}", pageable);
+        try {
+            Page<User> page = userRepository.findAll(pageable);
+            Page<UserResponse> mapped = page.map(UserMapper::mapToUserResponseSafe);
+            PageMeta meta = new PageMeta(
+                    page.getNumber(),
+                    page.getSize(),
+                    page.getTotalElements(),
+                    page.getTotalPages()
+            );
+            return new ApiResponse(200, mapped.getContent(), meta);
+        } catch (DataAccessException e) {
+            log.error("Ошибка базы данных", e);
+            throw new ServiceUnavailableException("БД недоступна");
+        }
     }
 
     @Transactional(readOnly = true)

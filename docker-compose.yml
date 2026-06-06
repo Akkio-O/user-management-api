@@ -1,0 +1,39 @@
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - app-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  spring-app:
+    build: .
+    container_name: spring-app
+    env_file:
+      - .env
+    ports:
+      - "${SPRING_PORT:-8081}:8081"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
