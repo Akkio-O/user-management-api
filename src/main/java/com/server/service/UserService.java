@@ -30,10 +30,12 @@ import static com.server.mapper.UserMapper.mapToUserResponse;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional(readOnly = true)
@@ -49,7 +51,7 @@ public class UserService {
                     page.getTotalElements(),
                     page.getTotalPages()
             );
-            return new ApiResponse(200, mapped.getContent(), meta);
+            return new ApiResponse(200, mapped.getContent(), "", meta);
         } catch (DataAccessException e) {
             log.error("Ошибка базы данных", e);
             throw new ServiceUnavailableException("БД недоступна");
@@ -85,24 +87,9 @@ public class UserService {
 
         User saved = userRepository.save(user);
         UserResponse savedUser = mapToUserResponse(saved);
-        return new ApiResponse(200, savedUser, "Изменены данные пользователя");
+        String token = jwtService.generateToken(user);
+        return new ApiResponse(200, savedUser, "Изменены данные пользователя", token);
     }
 
-    @Transactional
-    public ApiResponse create(CreateUserReq userReq) {
-        if (userRepository.existsByLogin(userReq.login())) {
-            throw new ResourceConflictException("Логин " + userReq.login() + " уже существует");
-        }
 
-        User user = mapToUserEntity(userReq);
-
-        user.setPasswordHash(passwordEncoder.encode(userReq.password()));
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setRole("USER");
-
-        User saved = userRepository.save(user);
-        UserResponse savedUser = mapToUserResponse(saved);
-        return new ApiResponse(201, savedUser, "Новый пользователь " + savedUser.login() + " создан");
-    }
 }

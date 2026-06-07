@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.ServiceUnavailableException;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -46,15 +45,5 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(userService.update(id, user));
-    }
-
-    @PostMapping(
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<ApiResponse> createUser(@Valid @RequestBody CreateUserReq user) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(userService.create(user));
     }
 }
