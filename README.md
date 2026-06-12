@@ -281,4 +281,4 @@ src/test
 - DTO для API-контрактов
 - Mapper для преобразования DTO ↔ Entity
 - Security слой для JWT-аутентификации
-- GlobalExceptionHandler для централизованной обработки ошибо
+- GlobalExceptionHandler для централизованной обработки ошибок
