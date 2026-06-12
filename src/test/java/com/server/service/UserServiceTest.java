@@ -28,6 +28,9 @@ class UserServiceTest {
     private UserService userService;
 
     @Autowired
+    private AuthService authService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -42,7 +45,7 @@ class UserServiceTest {
     void createShouldStorePasswordHashInsteadOfRawPassword() {
         CreateUserReq request = userRequest("evgeniy", RAW_PASSWORD);
 
-        userService.create(request);
+        authService.register(request);
 
         User saved = userRepository.findAll().getFirst();
         assertThat(saved.getPasswordHash()).isNotEqualTo(RAW_PASSWORD);
@@ -52,16 +55,16 @@ class UserServiceTest {
     @Test
     void createShouldThrowConflictWhenLoginAlreadyExists() {
         CreateUserReq request = userRequest("evgeniy", RAW_PASSWORD);
-        userService.create(request);
+        authService.register(request);
 
-        assertThatThrownBy(() -> userService.create(request))
+        assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(ResourceConflictException.class)
                 .hasMessageContaining("уже существует");
     }
 
     @Test
     void updateShouldAllowSameLoginForSameUser() {
-        ApiResponse response = userService.create(userRequest("evgeniy", RAW_PASSWORD));
+        ApiResponse response = authService.register(userRequest("evgeniy", RAW_PASSWORD));
         UserResponse created = (UserResponse) response.body();
 
         ApiResponse updatedResponse = userService.update(
